@@ -1,0 +1,5 @@
+{
+  "name": "PriceIntel AI",
+  "description": "An AI-powered price intelligence dashboard that automates product price tracking across major retailers. It groups fuzzy product matches (e.g., sizes, variants) and visualizes price disparities to help users find the best deals or track competitors.",
+  "requestFramePermissions": []
+}
