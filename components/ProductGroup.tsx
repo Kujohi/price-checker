@@ -15,6 +15,11 @@ const ProductGroup: React.FC<ProductGroupProps> = ({ variant }) => {
     prev.price < curr.price ? prev : curr
   );
 
+  const formatPrice = (price: number, currency: string = 'VND') => {
+      // Use vi-VN locale for formatting
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: currency }).format(price);
+  }
+
   return (
     <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden mb-6 transition-all hover:border-slate-600">
       <div 
@@ -35,7 +40,7 @@ const ProductGroup: React.FC<ProductGroupProps> = ({ variant }) => {
           <div className="text-right">
             <p className="text-xs text-slate-400 uppercase tracking-wider">Best Price</p>
             <p className="text-xl font-bold text-emerald-400">
-              ${bestPriceItem.price.toFixed(2)}
+              {formatPrice(bestPriceItem.price, bestPriceItem.currency)}
             </p>
             <p className="text-xs text-slate-500">at {bestPriceItem.storeName}</p>
           </div>
@@ -43,7 +48,7 @@ const ProductGroup: React.FC<ProductGroupProps> = ({ variant }) => {
           <div className="text-right hidden sm:block">
             <p className="text-xs text-slate-400 uppercase tracking-wider">Average</p>
             <p className="text-lg font-semibold text-slate-200">
-              ${variant.averagePrice.toFixed(2)}
+               {formatPrice(variant.averagePrice)}
             </p>
           </div>
 
@@ -76,25 +81,38 @@ const ProductGroup: React.FC<ProductGroupProps> = ({ variant }) => {
                   }`}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <div className={`p-2 rounded-full ${idx === 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'}`}>
-                      <ShoppingCart className="w-4 h-4" />
-                    </div>
+                    {item.image_url ? (
+                        <div className="relative w-12 h-12 flex-shrink-0">
+                             <img src={item.image_url} alt={item.productTitle} className="w-full h-full object-contain rounded bg-white p-1" />
+                             {idx === 0 && <div className="absolute -top-1 -right-1 bg-emerald-500 rounded-full p-0.5"><ShoppingCart className="w-3 h-3 text-white" /></div>}
+                        </div>
+                    ) : (
+                         <div className={`p-2 rounded-full ${idx === 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'}`}>
+                           <ShoppingCart className="w-4 h-4" />
+                         </div>
+                    )}
+                   
                     <div className="min-w-0">
                       <p className="font-medium text-slate-200 truncate">{item.storeName}</p>
-                      <p className="text-xs text-slate-500 truncate max-w-[200px]">{item.productTitle}</p>
+                      <p className="text-xs text-slate-500 truncate max-w-[200px]" title={item.productTitle}>{item.productTitle}</p>
+                       {item.unit && <p className="text-[10px] text-slate-400">Unit: {item.unit}</p>}
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-4">
                      <div className="text-right">
                       <p className={`font-bold ${idx === 0 ? 'text-emerald-400' : 'text-slate-200'}`}>
-                        ${item.price.toFixed(2)}
+                        {formatPrice(item.price, item.currency)}
                       </p>
+                      {item.originalPrice && item.originalPrice > item.price && (
+                         <p className="text-[10px] text-slate-500 line-through">
+                              {formatPrice(item.originalPrice, item.currency)}
+                         </p>
+                      )}
                       {item.stockStatus && (
                          <p className="text-[10px] text-slate-500">{item.stockStatus}</p>
                       )}
                     </div>
-                    {/* Placeholder for link if we had real URLs */}
                     {item.url && (
                         <a href={item.url} target="_blank" rel="noreferrer" className="text-slate-500 hover:text-indigo-400">
                              <ExternalLink className="w-4 h-4" />

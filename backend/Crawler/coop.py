@@ -2,7 +2,7 @@ import requests
 import json
 import os
 
-def fetch_data(keyword: str):
+def fetch_data(keyword: str, num_products: int):
     url = "https://discovery.tekoapis.com/api/v2/search-skus-v2"
 
     payload = {
@@ -31,9 +31,25 @@ def fetch_data(keyword: str):
     try:
         response = requests.post(url, json=payload, headers=headers)
         response.raise_for_status()
-        
-        data = response.json()
-        return data
+        response = response.json()
+        results = []
+        for product in response['data']['products'][0:num_products]:
+            image_url = product['imageUrl']
+            url = "https://cooponline.vn/" + product['canonical']
+            name = product['name']
+            originalPrice = int(product['supplierRetailPrice'])
+            discountPrice = int(originalPrice) - int(product['discountAmount'])
+            unit = product['uomName']
+            product = {
+                'image_url': image_url,
+                'url': url,
+                'name': name,
+                'discountPrice': discountPrice if int(discountPrice) != int(originalPrice) else None,
+                'originalPrice': originalPrice,
+                'unit': unit
+            }
+            results.append(product)
+        return results
 
     except requests.exceptions.RequestException as e:
         print(f"Error fetching data: {e}")
@@ -44,7 +60,7 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(script_dir, 'coop.json')
     
-    result = fetch_data("sữa chua")
+    result = fetch_data("sữa chua", 5)
     if result is not None:
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(json.dumps(result, indent=2, ensure_ascii=False))

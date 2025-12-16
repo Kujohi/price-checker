@@ -25,7 +25,7 @@ def crawl(keyword: str, num_products: int) -> str:
             'unit': None
         }
         results.append(product)
-    return results
+    return results[:num_products]
 
 if __name__ == "__main__":
     products = crawl("sữa chua", 5)

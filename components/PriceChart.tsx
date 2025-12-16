@@ -26,7 +26,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ items, variantName }) => {
         <div className="bg-slate-800 border border-slate-700 p-3 rounded shadow-lg text-sm">
           <p className="font-semibold text-slate-200">{label}</p>
           <p className="text-emerald-400 font-bold">
-            ${payload[0].value.toFixed(2)}
+            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(payload[0].value)}
           </p>
           <p className="text-slate-400 text-xs mt-1 max-w-[200px] truncate">
             {payload[0].payload.productTitle}
@@ -60,7 +60,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ items, variantName }) => {
           <YAxis 
             stroke="#94a3b8"
             tick={{ fill: '#94a3b8', fontSize: 12 }}
-            tickFormatter={(value) => `$${value}`}
+            tickFormatter={(value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', notation: 'compact' }).format(value)}
             tickLine={false}
             axisLine={false}
           />

@@ -1,140 +1,140 @@
-import { GoogleGenAI, Type, Schema } from "@google/genai";
-import { MarketAnalysis, ProductVariant } from "../types";
-
-// Define the schema for the structured output
-const analysisSchema: Schema = {
-  type: Type.OBJECT,
-  properties: {
-    variants: {
-      type: Type.ARRAY,
-      description: "List of distinct product variants found (grouped by size, weight, or pack quantity).",
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          variantName: {
-            type: Type.STRING,
-            description: "A short, descriptive name for this group (e.g., '12-Pack Cans', '2L Bottle')."
-          },
-          description: {
-            type: Type.STRING,
-            description: "Brief description of this specific variant group."
-          },
-          items: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                storeName: { type: Type.STRING },
-                price: { type: Type.NUMBER },
-                currency: { type: Type.STRING },
-                productTitle: { type: Type.STRING },
-                stockStatus: { type: Type.STRING, description: "In Stock, Out of Stock, or Unknown" }
-              },
-              required: ["storeName", "price", "currency", "productTitle"]
-            }
-          }
-        },
-        required: ["variantName", "items", "description"]
-      }
-    },
-    searchSummary: {
-      type: Type.STRING,
-      description: "A brief 2-sentence summary of the price landscape found."
-    }
-  },
-  required: ["variants", "searchSummary"]
-};
+/// <reference types="vite/client" />
+import Groq from 'groq-sdk';
+import { MarketAnalysis, ProductVariant, PricePoint } from "../types";
 
 export const fetchProductIntelligence = async (query: string): Promise<MarketAnalysis> => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY || process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error("API Key not found");
 
-  const ai = new GoogleGenAI({ apiKey });
-
-  // Step 1: Search Phase
-  // We use the search tool to "crawl" the web for current data.
-  // We cannot use JSON schema here because googleSearch is active.
-  const searchModel = "gemini-2.5-flash";
-  const searchPrompt = `
-    Find current prices for the product: "${query}".
-    Search across major US retailers including Walmart, Target, Amazon, Best Buy, Kroger, and Whole Foods.
-    
-    IMPORTANT:
-    - Look for different variations (e.g., different sizes, colors, pack counts).
-    - For EACH item found, list:
-      1. The specific Store Name
-      2. The exact Product Title
-      3. The Price
-      4. The specific Size/Unit/Variant details
-    - Try to find at least 3-5 different price points for each variant if possible.
-    - Be precise with numbers.
-  `;
-
-  const searchResponse = await ai.models.generateContent({
-    model: searchModel,
-    contents: searchPrompt,
-    config: {
-      tools: [{ googleSearch: {} }],
-    },
+  const groq = new Groq({
+    apiKey: apiKey,
+    dangerouslyAllowBrowser: true // Required for client-side usage if not proxying
   });
 
-  const searchRawText = searchResponse.text;
-  
-  if (!searchRawText) {
-    throw new Error("Failed to retrieve search results.");
+  // Step 1: Fetch Data from Backend
+  // We call the local python backend to get raw product data
+  let searchData;
+  try {
+      const response = await fetch('http://localhost:8000/search', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+              keyword: query,
+              num_products: 10 // Increased to get more data
+          }),
+      });
+      
+      if (!response.ok) {
+          throw new Error(`Backend error: ${response.statusText}`);
+      }
+      
+      const rawData = await response.json();
+      
+      // Assign IDs to each product
+      searchData = rawData.results.map((item: any, index: number) => ({
+          ...item,
+          id: index + 1
+      }));
+
+  } catch (error) {
+      console.error("Failed to fetch from backend:", error);
+      throw new Error("Failed to connect to search service. Is the backend running?");
   }
 
-  // Step 2: Analysis & Structuring Phase
-  // We feed the raw search text into the model again to structure it.
-  const analysisPrompt = `
-    You are a data extraction expert. 
-    I will provide you with unstructured market research text containing product prices from various stores.
-    
-    Your task:
-    1. Analyze the text and group products into distinct 'variants' (e.g., put all '2 Liter bottles' in one group, all '12-pack cans' in another).
-    2. Extract the price, store, and title for each entry.
-    3. Ignore irrelevant products or accessories that don't match the core query.
-    4. Output strictly in JSON format matching the schema.
+  // Create simplified data for the model (id, name, unit)
+  const simplifiedData = searchData.map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      unit: item.unit
+  }));
 
-    Input Text:
-    ${searchRawText}
+  // Step 2: Analysis & Structuring Phase
+  // We feed the simplified data into the model to get groups of IDs.
+  // We include the schema description in the prompt since we aren't using a strict schema object like Gemini's SDK.
+  const systemPrompt = `
+    You are a precise data analysis assistant.
+    Your task is to group a list of products based on their similarity (e.g., same product variant, size, weight, or pack quantity).
+    Ignore products that are clearly irrelevant to the query.
+    
+    You must output a valid JSON object with the following structure:
+    {
+      "grouped_products": [
+        {
+          "group_name": "string (e.g., '12-Pack Cans', '2L Bottle')",
+          "product_ids": [number, number]
+        }
+      ],
+      "searchSummary": "string (A brief 2-sentence summary of the price landscape found)"
+    }
   `;
 
-  const structureResponse = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: analysisPrompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: analysisSchema,
-    },
+  const userPrompt = `
+    Query: "${query}"
+    
+    DATA TO PROCESS:
+    ${JSON.stringify(simplifiedData, null, 2)}
+  `;
+
+  const chatCompletion = await groq.chat.completions.create({
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
+    ],
+    model: "llama-3.3-70b-versatile",
+    temperature: 0, // Low temperature for deterministic output
+    response_format: { type: "json_object" }
   });
 
-  const jsonText = structureResponse.text;
+  const jsonText = chatCompletion.choices[0]?.message?.content;
   if (!jsonText) {
     throw new Error("Failed to structure data.");
   }
 
   const structuredData = JSON.parse(jsonText);
 
-  // Post-process to calculate derived stats (min/max/avg)
-  const processedVariants: ProductVariant[] = structuredData.variants.map((v: any) => {
-    const prices = v.items.map((i: any) => i.price);
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
-    const sum = prices.reduce((a: number, b: number) => a + b, 0);
-    const avgPrice = sum / prices.length;
+  // Post-process: Map IDs back to full product objects and calculate stats
+  const processedVariants: ProductVariant[] = structuredData.grouped_products.map((group: any) => {
+    // Filter and map back to full objects using IDs
+    const items: PricePoint[] = group.product_ids
+        .map((id: number) => searchData.find((p: any) => p.id === id))
+        .filter((item: any) => item !== undefined) // Safety check
+        .map((item: any) => {
+            // Determine effective price
+            const price = item.discountPrice !== null && item.discountPrice !== undefined ? item.discountPrice : item.originalPrice;
+            
+            return {
+                storeName: item.source,
+                price: price, 
+                originalPrice: item.originalPrice,
+                currency: "VND", // Assuming VND
+                productTitle: item.name,
+                url: item.url,
+                image_url: item.image_url,
+                unit: item.unit
+            };
+        });
+
+    const prices = items.map(i => i.price).filter(p => p !== null && p !== undefined);
+    const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+    const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+    const sum = prices.reduce((a, b) => a + b, 0);
+    const avgPrice = prices.length > 0 ? sum / prices.length : 0;
 
     return {
-      ...v,
+      variantName: group.group_name,
+      description: `Found ${items.length} offers for this variant.`,
+      items: items,
       minPrice,
       maxPrice,
       averagePrice: avgPrice
     };
-  });
+  }).filter((variant: ProductVariant) => variant.items.length > 0); // Remove empty groups
 
   return {
     query,
-    searchSummary: structuredData.searchSummary,
+    searchSummary: structuredData.searchSummary || `Found ${processedVariants.length} variants for ${query}.`,
     variants: processedVariants,
     lastUpdated: new Date().toISOString()
   };

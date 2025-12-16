@@ -2,7 +2,7 @@ import requests
 import json
 import os
 
-def fetch_data(keyword: str):
+def fetch_data(keyword: str, num_products: int = 5):
     url = "https://onelife-api.kingfoodmart.com/v1/gateway/"
 
     payload = {
@@ -10,7 +10,7 @@ def fetch_data(keyword: str):
         "variables": {
             "type": None,
             "target": "PRODUCT",
-            "first": 5,
+            "first": num_products,
             "keyword": keyword,
             "after": None
         },
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(script_dir, 'kingfoodmart.json')
     
-    result = fetch_data("xoài cát hòa lộc")
+    result = fetch_data("xoài cát hòa lộc", 5)
     if result is not None:
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(json.dumps(result, indent=2, ensure_ascii=False))

@@ -1,10 +1,13 @@
 export interface PricePoint {
   storeName: string;
   price: number;
+  originalPrice?: number;
   currency: string;
   productTitle: string;
   stockStatus?: string;
-  url?: string; // Optional, as search grounding might not always map 1:1 to a clean URL
+  url?: string;
+  image_url?: string;
+  unit?: string;
 }
 
 export interface ProductVariant {

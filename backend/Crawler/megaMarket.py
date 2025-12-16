@@ -3,7 +3,7 @@ import json
 import os
 import urllib.parse
 
-def fetch_data(keyword: str):
+def fetch_data(keyword: str, num_products: int = 5):
     url = "https://online.mmvietnam.com/graphql"
 
     query = """
@@ -12,7 +12,7 @@ def fetch_data(keyword: str):
 
     variables = {
         "currentPage": 1,
-        "pageSize": 5,
+        "pageSize": num_products,
         "filters": {
             "category_uid": {
                 "in": []
@@ -33,8 +33,11 @@ def fetch_data(keyword: str):
     }
 
     headers = {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'accept': '*/*',
+        'accept-language': 'en-US,en;q=0.9,vi-VN;q=0.8,vi;q=0.7',
+        'content-type': 'application/json',
+        'store': 'b2c_10010_vi',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Origin': 'https://online.mmvietnam.com',
         'Referer': 'https://online.mmvietnam.com/'
     }
@@ -46,34 +49,23 @@ def fetch_data(keyword: str):
         data = response.json()
         
         results = []
-        if 'data' in data and 'products' in data['data'] and 'items' in data['data']['products']:
-            for item in data['data']['products']['items']:
-                try:
-                    name = item.get('name')
-                    url_key = item.get('url_key')
-                    url_suffix = item.get('url_suffix', '')
-                    item_url = f"https://online.mmvietnam.com/{url_key}{url_suffix}"
-                    
-                    price_info = item.get('price_range', {}).get('maximum_price', {})
-                    final_price = price_info.get('final_price', {}).get('value')
-                    regular_price = price_info.get('regular_price', {}).get('value')
-                    
-                    unit = item.get('unit_ecom', '')
-                    image_url = item.get('small_image', {}).get('url')
+        for item in data['data']['products']['items'][0:num_products]   :
+            image_url = item['small_image']['url']
+            url = 'https://online.mmvietnam.com/' + item['url_key']
+            name = item.get('name')
+            originalPrice = item['price_range']['maximum_price']['regular_price']['value']
+            discountPrice = item['price_range']['maximum_price']['final_price']['value']
+            unit = item['unit_ecom']
+            product = {
+                'image_url': image_url,
+                'url': url,
+                'name': name,
+                'originalPrice': originalPrice,
+                'discountPrice': discountPrice if discountPrice != originalPrice else None,
+                'unit': unit
+            }
+            results.append(product)
 
-                    product = {
-                        "image_url": image_url,
-                        "url": item_url,
-                        "name": name,
-                        "discountPrice": int(final_price) if final_price and final_price != regular_price else None,
-                        "originalPrice": int(regular_price) if regular_price else None,
-                        "unit": unit
-                    }
-                    results.append(product)
-                except Exception as e:
-                    print(f"Error parsing item: {e}")
-                    continue
-                    
         return results
 
     except requests.exceptions.RequestException as e:
@@ -85,7 +77,7 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(script_dir, 'megaMarket.json')
     
-    result = fetch_data("sữa chua vinamilk nha đam thùng")
+    result = fetch_data("xoài cát hòa lộc", 10)
     if result is not None:
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(json.dumps(result, indent=2, ensure_ascii=False))

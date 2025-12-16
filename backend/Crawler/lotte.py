@@ -41,7 +41,7 @@ def fetch_data(keyword: str, num_products: int):
 
         for item in data['data']['items'][0:num_products]:
             image_url = item.get('image_url')
-            url = "https://www.lottemart.vn" + item.get('url_key')
+            url = item.get('url_key')
             name = item.get('name')
             defaultPrice = item['price']['VND']['default']
             price = item['price']['VND']['price']
