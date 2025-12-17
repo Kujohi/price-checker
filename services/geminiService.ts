@@ -58,8 +58,25 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
       throw new Error("Failed to connect to search service. Is the backend running?");
   }
 
+  // Pre-filter: Keyword matching
+  // Only keep products where the name contains at least 2 words from the query (if query has >= 2 words)
+  // or 1 word if query is single word.
+  const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 0);
+  const minMatches = queryWords.length >= 2 ? 2 : 1;
+
+  const filteredSearchData = searchData.filter((item: any) => {
+    const productName = (item.name || "").toLowerCase();
+    let matches = 0;
+    for (const word of queryWords) {
+      if (productName.includes(word)) {
+        matches++;
+      }
+    }
+    return matches >= minMatches;
+  });
+
   // Create simplified data for the model (id, name, unit)
-  const simplifiedData = searchData.map((item: any) => ({
+  const simplifiedData = filteredSearchData.map((item: any) => ({
       id: item.id,
       name: item.name,
   }));
