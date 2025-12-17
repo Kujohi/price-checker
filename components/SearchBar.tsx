@@ -27,7 +27,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={isLoading}
-            placeholder="Search product (e.g., 'Diet Coke', 'Sony WH-1000XM5')"
+            placeholder="Tìm kiếm sản phẩm (ví dụ: 'Coca Cola', 'Tai nghe Sony')"
             className="w-full py-4 pl-12 pr-4 bg-transparent text-slate-100 placeholder-slate-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
           />
           <button
@@ -35,7 +35,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => {
             disabled={isLoading || !input.trim()}
             className="absolute right-2 px-4 py-2 bg-slate-800 text-slate-200 rounded-md hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Track'}
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Tìm'}
           </button>
         </div>
       </form>

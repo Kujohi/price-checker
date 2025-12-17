@@ -2,8 +2,4 @@ fastapi
 uvicorn
 requests
 beautifulsoup4
-selenium
-undetected-chromedriver
-webdriver-manager
 pydantic
-

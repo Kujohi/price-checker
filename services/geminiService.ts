@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import Groq from 'groq-sdk';
-import { MarketAnalysis, ProductVariant, PricePoint } from "../types";
+import { MarketAnalysis, PricePoint } from "../types";
 
 export const fetchProductIntelligence = async (query: string): Promise<MarketAnalysis> => {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY || process.env.GROQ_API_KEY;
@@ -15,7 +15,7 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
   // We call the local python backend to get raw product data
   let searchData;
   try {
-      const response = await fetch('http://localhost:8000/search', {
+      const response = await fetch('/api/search', {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -50,23 +50,18 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
       unit: item.unit
   }));
 
-  // Step 2: Analysis & Structuring Phase
-  // We feed the simplified data into the model to get groups of IDs.
-  // We include the schema description in the prompt since we aren't using a strict schema object like Gemini's SDK.
+  // Step 2: Analysis & Filtering Phase
+  // We feed the simplified data into the model to filter relevant products.
   const systemPrompt = `
     You are a precise data analysis assistant.
-    Your task is to group a list of products based on their similarity (e.g., same product variant, size, weight, or pack quantity).
-    Ignore products that are clearly irrelevant to the query.
+    Your task is to filter a list of products based on the search query "${query}".
+    Identify products that are relevant to the query and match the user's intent.
+    Exclude products that are irrelevant, accessories (unless asked for), or clearly wrong matches.
     
     You must output a valid JSON object with the following structure:
     {
-      "grouped_products": [
-        {
-          "group_name": "string (e.g., '12-Pack Cans', '2L Bottle')",
-          "product_ids": [number, number]
-        }
-      ],
-      "searchSummary": "string (A brief 2-sentence summary of the price landscape found)"
+      "valid_product_ids": [number, number],
+      "searchSummary": "string (A brief 1-sentence summary of what was found, in Vietnamese)"
     }
   `;
 
@@ -93,49 +88,31 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
   }
 
   const structuredData = JSON.parse(jsonText);
+  const validIds = structuredData.valid_product_ids || [];
 
-  // Post-process: Map IDs back to full product objects and calculate stats
-  const processedVariants: ProductVariant[] = structuredData.grouped_products.map((group: any) => {
-    // Filter and map back to full objects using IDs
-    const items: PricePoint[] = group.product_ids
-        .map((id: number) => searchData.find((p: any) => p.id === id))
-        .filter((item: any) => item !== undefined) // Safety check
-        .map((item: any) => {
-            // Determine effective price
-            const price = item.discountPrice !== null && item.discountPrice !== undefined ? item.discountPrice : item.originalPrice;
-            
-            return {
-                storeName: item.source,
-                price: price, 
-                originalPrice: item.originalPrice,
-                currency: "VND", // Assuming VND
-                productTitle: item.name,
-                url: item.url,
-                image_url: item.image_url,
-                unit: item.unit
-            };
-        });
+  // Post-process: Map IDs back to full product objects
+  const validProducts: PricePoint[] = validIds.map((id: number) => {
+       const item = searchData.find((p: any) => p.id === id);
+       if (!item) return null;
 
-    const prices = items.map(i => i.price).filter(p => p !== null && p !== undefined);
-    const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
-    const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
-    const sum = prices.reduce((a, b) => a + b, 0);
-    const avgPrice = prices.length > 0 ? sum / prices.length : 0;
+       const price = item.discountPrice !== null && item.discountPrice !== undefined ? item.discountPrice : item.originalPrice;
 
-    return {
-      variantName: group.group_name,
-      description: `Found ${items.length} offers for this variant.`,
-      items: items,
-      minPrice,
-      maxPrice,
-      averagePrice: avgPrice
-    };
-  }).filter((variant: ProductVariant) => variant.items.length > 0); // Remove empty groups
+       return {
+          storeName: item.source,
+          price: price, 
+          originalPrice: item.originalPrice,
+          currency: "VND", // Assuming VND
+          productTitle: item.name,
+          url: item.url,
+          image_url: item.image_url,
+          unit: item.unit
+       };
+  }).filter((item: any) => item !== null);
 
   return {
     query,
-    searchSummary: structuredData.searchSummary || `Found ${processedVariants.length} variants for ${query}.`,
-    variants: processedVariants,
+    searchSummary: structuredData.searchSummary || `Tìm thấy ${validProducts.length} sản phẩm cho ${query}.`,
+    products: validProducts,
     lastUpdated: new Date().toISOString()
   };
 };

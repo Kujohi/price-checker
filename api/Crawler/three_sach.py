@@ -10,7 +10,7 @@ def crawl(keyword: str, num_products: int) -> str:
     results = []
 
     for product in products:
-        image_url = product.find('img')['data-src']
+        image_url = "https:" + product.find('picture').find('source')['data-srcset'] 
         url = "https://3sach.vn" + product.find('a')['href']
         name = product.find('h3').text
         delPrice = product.find('span', class_='price-del').text.replace('₫', '').replace(',', '') if product.find('span', class_='price-del') else None

@@ -11,7 +11,7 @@ export interface PricePoint {
 }
 
 export interface ProductVariant {
-  variantName: string; // e.g., "12-Pack 12oz Cans", "2 Liter Bottle"
+  variantName: string;
   description: string;
   averagePrice: number;
   minPrice: number;
@@ -22,14 +22,14 @@ export interface ProductVariant {
 export interface MarketAnalysis {
   query: string;
   searchSummary: string;
-  variants: ProductVariant[];
+  products: PricePoint[];
   lastUpdated: string;
 }
 
 export enum AppState {
   IDLE = 'IDLE',
-  SEARCHING = 'SEARCHING', // Phase 1: Search Grounding
-  ANALYZING = 'ANALYZING', // Phase 2: Structuring Data
+  SEARCHING = 'SEARCHING',
+  ANALYZING = 'ANALYZING',
   COMPLETE = 'COMPLETE',
   ERROR = 'ERROR'
 }

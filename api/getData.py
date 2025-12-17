@@ -9,7 +9,6 @@ import os
 # Add the Crawler directory to the python path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'Crawler'))
 
-import aeon
 import coop
 import emart
 import farmer
@@ -40,19 +39,16 @@ class Product(BaseModel):
 
 class SearchRequest(BaseModel):
     keyword: str
-    num_products: Optional[int] = 5
+    num_products: Optional[int] = 10
 
 class SearchResponse(BaseModel):
     keyword: str
     results: List[Product]
 
-async def run_crawler(crawler_module, keyword: str, source_name: str, num_products: int = 5) -> List[Product]:
+async def run_crawler(crawler_module, keyword: str, source_name: str, num_products) -> List[Product]:
     try:
         data = []
-        if source_name == 'Aeon':
-            # Aeon ignored as per request
-            pass
-        elif source_name == 'Coopmart':
+        if source_name == 'Coopmart':
             data = await asyncio.to_thread(crawler_module.fetch_data, keyword, num_products)
         elif source_name == 'Emart':
             data = await asyncio.to_thread(crawler_module.crawl, keyword, num_products)
@@ -88,13 +84,12 @@ async def run_crawler(crawler_module, keyword: str, source_name: str, num_produc
         print(f"Error running crawler {source_name}: {e}")
         return []
 
-@app.post("/search", response_model=SearchResponse)
+@app.post("/api/search", response_model=SearchResponse)
 async def search(request: SearchRequest):
     keyword = request.keyword
     num_products = request.num_products
     
     tasks = [
-        # run_crawler(aeon, keyword, "Aeon", num_products), # Ignored
         run_crawler(coop, keyword, "Coopmart", num_products),
         run_crawler(emart, keyword, "Emart", num_products),
         run_crawler(farmer, keyword, "Farmers Market", num_products),

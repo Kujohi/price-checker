@@ -6,7 +6,7 @@ def fetch_data(keyword: str, num_products: int):
     url = "https://www.lottemart.vn/v1/p/mart/es/vi_nsg/products/search"
 
     payload = {
-        "limit": 50,
+        "limit": 20,
         "offset": 1,
         "facet_filters": {},
         "fields": [
@@ -41,7 +41,7 @@ def fetch_data(keyword: str, num_products: int):
 
         for item in data['data']['items'][0:num_products]:
             image_url = item.get('image_url')
-            url = item.get('url_key')
+            url = "https://www.lottemart.vn/vi-nsg/product/" + item.get('url_key')
             name = item.get('name')
             defaultPrice = item['price']['VND']['default']
             price = item['price']['VND']['price']

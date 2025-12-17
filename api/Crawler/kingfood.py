@@ -34,6 +34,7 @@ def fetch_data(keyword: str, num_products: int = 5):
             unit {
               name
             }
+            thumbnail
           }
         }
       }
@@ -61,6 +62,7 @@ def fetch_data(keyword: str, num_products: int = 5):
                 sub_cate = node.get('subCate', '')
                 for variant in node.get('variants', []):
                     product = {
+                        "image_url": variant.get('thumbnail'),
                         "url": f"https://kingfoodmart.com/{sub_cate}/{variant.get('slug')}",
                         "name": variant.get('name'),
                         "discountPrice": variant.get('discountPrice'),
@@ -68,8 +70,6 @@ def fetch_data(keyword: str, num_products: int = 5):
                         "unit": variant.get('unit', {}).get('name')
                     }
                     products.append(product)
-
-        print(json.dumps(products, indent=2, ensure_ascii=False))
         return products
 
     except requests.exceptions.RequestException as e:

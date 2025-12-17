@@ -51,7 +51,7 @@ def fetch_data(keyword: str, num_products: int = 5):
         results = []
         for item in data['data']['products']['items'][0:num_products]   :
             image_url = item['small_image']['url']
-            url = 'https://online.mmvietnam.com/' + item['url_key']
+            url = 'https://online.mmvietnam.com/' + item['canonical_url']
             name = item.get('name')
             originalPrice = item['price_range']['maximum_price']['regular_price']['value']
             discountPrice = item['price_range']['maximum_price']['final_price']['value']
