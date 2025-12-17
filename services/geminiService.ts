@@ -2,8 +2,23 @@
 import Groq from 'groq-sdk';
 import { MarketAnalysis, PricePoint } from "../types";
 
+// Helper function to get API Key using round-robin or random selection
+const getGroqApiKey = () => {
+  const keys = [
+    import.meta.env.VITE_GROQ_API_KEY_1 || process.env.GROQ_API_KEY_1,
+    import.meta.env.VITE_GROQ_API_KEY_2 || process.env.GROQ_API_KEY_2,
+    import.meta.env.VITE_GROQ_API_KEY_3 || process.env.GROQ_API_KEY_3,
+  ].filter(Boolean); // Remove undefined/null keys
+
+  if (keys.length === 0) return null;
+  
+  // Randomly select a key to distribute load
+  const randomIndex = Math.floor(Math.random() * keys.length);
+  return keys[randomIndex];
+};
+
 export const fetchProductIntelligence = async (query: string): Promise<MarketAnalysis> => {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY || process.env.GROQ_API_KEY;
+  const apiKey = getGroqApiKey();
   if (!apiKey) throw new Error("API Key not found");
 
   const groq = new Groq({
@@ -47,7 +62,6 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
   const simplifiedData = searchData.map((item: any) => ({
       id: item.id,
       name: item.name,
-      unit: item.unit
   }));
 
   // Step 2: Analysis & Filtering Phase
@@ -56,11 +70,15 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
     Bạn là một trợ lý phân tích dữ liệu chính xác.
     Nhiệm vụ của bạn là lọc danh sách sản phẩm dựa trên truy vấn tìm kiếm "${query}".
     Xác định các sản phẩm liên quan đến truy vấn và phù hợp với ý định của người dùng.
-    Loại bỏ các sản phẩm không liên quan hoặc các kết quả rõ ràng sai lệch.
+    Loại bỏ các sản phẩm không liên quan và không chính xác với từ khóa tìm kiếm.
+    Sản phầm hợp lệ phải đi riêng lẻ, không đi theo combo.
     
     Bạn phải xuất ra một đối tượng JSON hợp lệ với cấu trúc sau:
     {
-      "valid_product_ids": [number, number],
+      "valid_product_ids": {
+        "product_id": number,
+        "product_name": string,
+      },
       "searchSummary": "string (Một tóm tắt ngắn gọn 1 câu về những gì tìm thấy, bằng tiếng Việt)"
     }
   `;
@@ -77,7 +95,7 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
     ],
-    model: "llama-3.3-70b-versatile",
+    model: "meta-llama/llama-4-maverick-17b-128e-instruct",
     temperature: 0, // Low temperature for deterministic output
     response_format: { type: "json_object" }
   });
@@ -88,7 +106,11 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
   }
 
   const structuredData = JSON.parse(jsonText);
-  const validIds = structuredData.valid_product_ids || [];
+  // Extract product IDs from the new structure: array of objects { product_id, product_name }
+  const validItems = structuredData.valid_product_ids || [];
+  const validIds = Array.isArray(validItems) 
+    ? validItems.map((item: any) => item.product_id)
+    : [];
 
   // Post-process: Map IDs back to full product objects
   const validProducts: PricePoint[] = validIds.map((id: number) => {
