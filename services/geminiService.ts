@@ -53,15 +53,15 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
   // Step 2: Analysis & Filtering Phase
   // We feed the simplified data into the model to filter relevant products.
   const systemPrompt = `
-    You are a precise data analysis assistant.
-    Your task is to filter a list of products based on the search query "${query}".
-    Identify products that are relevant to the query and match the user's intent.
-    Exclude products that are irrelevant, accessories (unless asked for), or clearly wrong matches.
+    Bạn là một trợ lý phân tích dữ liệu chính xác.
+    Nhiệm vụ của bạn là lọc danh sách sản phẩm dựa trên truy vấn tìm kiếm "${query}".
+    Xác định các sản phẩm liên quan đến truy vấn và phù hợp với ý định của người dùng.
+    Loại bỏ các sản phẩm không liên quan hoặc các kết quả rõ ràng sai lệch.
     
-    You must output a valid JSON object with the following structure:
+    Bạn phải xuất ra một đối tượng JSON hợp lệ với cấu trúc sau:
     {
       "valid_product_ids": [number, number],
-      "searchSummary": "string (A brief 1-sentence summary of what was found, in Vietnamese)"
+      "searchSummary": "string (Một tóm tắt ngắn gọn 1 câu về những gì tìm thấy, bằng tiếng Việt)"
     }
   `;
 
@@ -77,7 +77,7 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
     ],
-    model: "llama-3.3-70b-versatile",
+    model: "openai/gpt-oss-120b",
     temperature: 0, // Low temperature for deterministic output
     response_format: { type: "json_object" }
   });
