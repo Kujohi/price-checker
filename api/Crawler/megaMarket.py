@@ -64,7 +64,6 @@ def fetch_data(keyword: str, num_products: int = 5):
                 'originalPrice': originalPrice,
                 'discountPrice': discountPrice if discountPrice != originalPrice else None,
                 'unit': unit,
-                'quantity': quantity
             }
             results.append(product)
 
@@ -79,7 +78,7 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(script_dir, 'megaMarket.json')
     
-    result = fetch_data("xoài cát hòa lộc", 10)
+    result = fetch_data("xà lách lollo tím đà lạt", 10)
     if result is not None:
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(json.dumps(result, indent=2, ensure_ascii=False))

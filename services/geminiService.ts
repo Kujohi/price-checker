@@ -83,23 +83,24 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
 
   // Step 2: Analysis & Filtering Phase
   // We feed the simplified data into the model to filter relevant products.
-  const systemPrompt = `
-    Bạn là một trợ lý phân tích dữ liệu chính xác.
-    Nhiệm vụ của bạn là lọc danh sách sản phẩm dựa trên truy vấn tìm kiếm "${query}".
-    Xác định danh sách các sản phẩm liên quan đến truy vấn và loại bỏ các sản phẩm không liên quan hay không chính xác với từ khóa tìm kiếm.
-    Sản phẩm hợp lệ phải đi riêng lẻ, không đi theo combo.
-    Nhận thức được các tên đồng nghĩa, ví dụ: (lô lô hay lollo, cherry hay sơ ri,...).
-    Nếu số lượng sản phẩm quá ít <= 2 thì có thể bỏ qua một số yếu tố xét hợp lệ như vùng hay khối lượng
+  const systemPrompt = `Bạn là một trợ lý phân tích dữ liệu chính xác.
+Nhiệm vụ của bạn là lọc danh sách sản phẩm dựa trên truy vấn tìm kiếm "${query}".
+
+Sản phẩm hợp lệ cần:
+- Giống với truy vấn và loại bỏ các sản phẩm không liên quan hay không chính xác với từ khóa tìm kiếm.
+- Không đi theo kèm combo với sản phẩm khác không được truy vấn.
+
+Nhận thức được các tên đồng nghĩa, ví dụ: (lô lô hay lollo, cherry hay sơ ri,...).
+Nếu số lượng sản phẩm hợp lệ quá ít < 3 thì có thể bỏ qua một số yếu tố xét hợp lệ như vùng hay khối lượng
     
-    Xuất kết quả dưới dạng JSON với cấu trúc sau:
-    {
-      "valid_product_ids": {
-        "product_id": int,
-        "product_name": string,
-      },
-      "searchSummary": "string (Một tóm tắt ngắn gọn 1 câu về những gì tìm thấy, bằng tiếng Việt)"
-    }
-  `;
+Xuất danh sách sản phẩm hợp lệ dưới dạng JSON với cấu trúc sau:
+{
+  "valid_product_ids": {
+    "product_id": int,
+    "product_name": string,
+  }
+}
+`;
 
   const userPrompt = `
     Query: "${query}"
@@ -152,7 +153,7 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
 
   return {
     query,
-    searchSummary: structuredData.searchSummary || `Tìm thấy ${validProducts.length} sản phẩm cho ${query}.`,
+    searchSummary: `Tìm thấy ${validProducts.length} sản phẩm cho ${query}.`,
     products: validProducts,
     lastUpdated: new Date().toISOString()
   };

@@ -6,7 +6,10 @@ def crawl(keyword: str, num_products: int) -> str:
     url = f'https://farmersmarket.vn/search?type=product&q=filter=((title%3Aproduct%20contains%20{keyword})%7C%7C(sku%3Aproduct%20contains%20{keyword}))'
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
-    products = soup.find_all('div', class_='col-lg-2 col-md-4 col-4 product-loop prod-action-small')
+    result = soup.find('div', class_='search-list-results')
+    if result is None:
+        return []
+    products = result.find_all('div', class_='col-lg-2 col-md-4 col-4 product-loop prod-action-small')
     results = []
 
     for product in products:

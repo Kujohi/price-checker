@@ -40,7 +40,7 @@ def fetch_data(keyword: str, num_products: int):
             originalPrice = int(product['supplierRetailPrice'])
             discountPrice = int(originalPrice) - int(product['discountAmount'])
             unit = product['uomName']
-            quantity = product['stockQty']
+            quantity = product['totalAvailable']
             product = {
                 'image_url': image_url,
                 'url': url,
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(script_dir, 'coop.json')
     
-    result = fetch_data("sữa chua", 5)
+    result = fetch_data("xoài cát hòa lộc chín", 5)
     if result is not None:
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(json.dumps(result, indent=2, ensure_ascii=False))

@@ -39,26 +39,27 @@ def fetch_data(keyword: str, num_products: int):
         # Transform data
         products = []
 
-        for item in data['data']['items'][0:num_products]:
-            image_url = item.get('image_url')
-            url = "https://www.lottemart.vn/vi-nsg/product/" + item.get('url_key')
-            name = item.get('name')
-            defaultPrice = item['price']['VND']['default']
-            price = item['price']['VND']['price']
-            unit = item['custom_attribute']['unit']
-            quantity = item.get('stock_qty')
+        if (data['data']['items'] is not None):
+            for item in data['data']['items'][0:num_products]:
+                image_url = item.get('image_url')
+                url = "https://www.lottemart.vn/vi-nsg/product/" + item.get('url_key')
+                name = item.get('name')
+                defaultPrice = item['price']['VND']['default']
+                price = item['price']['VND']['price']
+                unit = item['custom_attribute']['unit']
+                quantity = item.get('stock_qty')
 
-            product = {
-                "image_url": image_url,
-                "url": url,
-                "name": name,
-                "discountPrice": defaultPrice if defaultPrice != price else None,
-                "originalPrice": price,
-                "unit": unit,
-                "quantity": quantity
-            }
-            
-            products.append(product)
+                product = {
+                    "image_url": image_url,
+                    "url": url,
+                    "name": name,
+                    "discountPrice": defaultPrice if defaultPrice != price else None,
+                    "originalPrice": price,
+                    "unit": unit,
+                    "quantity": quantity
+                }
+                
+                products.append(product)
 
         return products
 

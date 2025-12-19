@@ -28,7 +28,7 @@ def crawl(keyword: str, num_products: int) -> str:
     return results[:num_products]
 
 if __name__ == "__main__":
-    products = crawl("sữa chua", 5)
+    products = crawl("đậu hà lan đà lạt", 5)
     #write the products to a json file
     with open('3sach.json', 'w', encoding='utf-8') as f:
         json.dump(products, f, indent=2, ensure_ascii=False)
