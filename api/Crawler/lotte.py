@@ -46,6 +46,7 @@ def fetch_data(keyword: str, num_products: int):
             defaultPrice = item['price']['VND']['default']
             price = item['price']['VND']['price']
             unit = item['custom_attribute']['unit']
+            quantity = item.get('stock_qty')
 
             product = {
                 "image_url": image_url,
@@ -53,7 +54,8 @@ def fetch_data(keyword: str, num_products: int):
                 "name": name,
                 "discountPrice": defaultPrice if defaultPrice != price else None,
                 "originalPrice": price,
-                "unit": unit
+                "unit": unit,
+                "quantity": quantity
             }
             
             products.append(product)

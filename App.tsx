@@ -1,4 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { supabase } from './services/supabase';
+import Login from './components/Login';
 import * as XLSX from 'xlsx';
 import { 
   BarChart3, 
@@ -30,6 +32,32 @@ interface BatchResult {
 }
 
 function App() {
+  const [session, setSession] = useState<any>(null);
+  const [loadingSession, setLoadingSession] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.warn('Error checking session:', error.message);
+        setLoadingSession(false);
+        return;
+      }
+      setSession(data.session);
+      setLoadingSession(false);
+    }).catch((err) => {
+      console.error('Unexpected error checking session:', err);
+      setLoadingSession(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [analysisData, setAnalysisData] = useState<MarketAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -121,7 +149,7 @@ function App() {
 
     for (let i = 0; i < queries.length; i++) {
       setCurrentBatchIndex(i);
-      const query = queries[i];
+      const query = queries[i].toLowerCase();
       
       // Add a pending entry
       setBatchResults(prev => [...prev, { query, products: [], status: 'pending' }]);
@@ -188,7 +216,8 @@ function App() {
             'Giá (VND)': p.price,
             'Giá Gốc (VND)': p.originalPrice || '',
             'Đơn Vị': p.unit || '',
-            'Link': p.url || '',
+            'Tồn Kho': p.quantity || '',
+            'Link': p.url || ''
           });
         });
       } else {
@@ -215,6 +244,7 @@ function App() {
       'Giá (VND)': p.price,
       'Giá Gốc (VND)': p.originalPrice || '',
       'Đơn Vị': p.unit || '',
+      'Tồn Kho': p.quantity || '',
       'Link': p.url || ''
     }));
 
@@ -223,6 +253,22 @@ function App() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Sản Phẩm");
     XLSX.writeFile(workbook, `Bao_Cao_Gia_${analysisData.query.replace(/\s+/g, '_')}.xlsx`);
   };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  if (loadingSession) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Login onLoginSuccess={() => {}} />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 selection:bg-emerald-500/30">
@@ -239,6 +285,12 @@ function App() {
           <div className="text-sm text-slate-400 hidden sm:block">
             Phân Tích Thị Trường Thông Minh
           </div>
+          <button
+            onClick={handleSignOut}
+            className="ml-4 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700"
+          >
+            Đăng xuất
+          </button>
         </div>
       </header>
 
@@ -370,6 +422,7 @@ function App() {
                           {result.status === 'success' && result.products.length > 0 && (
                             <div className="text-sm text-slate-400 ml-6">
                               Giá tốt nhất: <span className="text-emerald-400 font-bold">{result.products[0].price.toLocaleString('vi-VN')}đ</span> tại {result.products[0].storeName}
+                              {result.products[0].quantity !== undefined && <span> - Tồn kho: {result.products[0].quantity}</span>}
                             </div>
                           )}
                            {result.status === 'error' && (

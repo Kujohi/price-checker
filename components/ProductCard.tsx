@@ -30,6 +30,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {product.productTitle}
           </h4>
            {product.unit && <p className="text-xs text-slate-500">Đơn vị: {product.unit}</p>}
+           {product.quantity !== undefined && <p className="text-xs text-slate-500">Tồn kho: {product.quantity}</p>}
         </div>
       </div>
       

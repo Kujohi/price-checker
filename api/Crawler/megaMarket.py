@@ -56,13 +56,15 @@ def fetch_data(keyword: str, num_products: int = 5):
             originalPrice = item['price_range']['maximum_price']['regular_price']['value']
             discountPrice = item['price_range']['maximum_price']['final_price']['value']
             unit = item['unit_ecom']
+            quantity = item['stock_status']
             product = {
                 'image_url': image_url,
                 'url': url,
                 'name': name,
                 'originalPrice': originalPrice,
                 'discountPrice': discountPrice if discountPrice != originalPrice else None,
-                'unit': unit
+                'unit': unit,
+                'quantity': quantity
             }
             results.append(product)
 

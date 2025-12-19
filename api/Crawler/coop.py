@@ -40,13 +40,15 @@ def fetch_data(keyword: str, num_products: int):
             originalPrice = int(product['supplierRetailPrice'])
             discountPrice = int(originalPrice) - int(product['discountAmount'])
             unit = product['uomName']
+            quantity = product['stockQty']
             product = {
                 'image_url': image_url,
                 'url': url,
                 'name': name,
                 'discountPrice': discountPrice if int(discountPrice) != int(originalPrice) else None,
                 'originalPrice': originalPrice,
-                'unit': unit
+                'unit': unit,
+                'quantity': quantity
             }
             results.append(product)
         return results

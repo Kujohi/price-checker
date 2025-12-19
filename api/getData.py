@@ -35,6 +35,7 @@ class Product(BaseModel):
     discountPrice: Optional[int] = None
     originalPrice: Optional[int] = None
     unit: Optional[str] = None
+    quantity: Optional[float] = None
     source: str
 
 class SearchRequest(BaseModel):
@@ -76,6 +77,7 @@ async def run_crawler(crawler_module, keyword: str, source_name: str, num_produc
                 discountPrice=item.get('discountPrice'),
                 originalPrice=item.get('originalPrice'),
                 unit=item.get('unit'),
+                quantity=item.get('quantity'),
                 source=source_name
             ))
         return products

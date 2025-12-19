@@ -31,6 +31,9 @@ def fetch_data(keyword: str, num_products: int = 5):
             name
             discountPrice
             originalPrice
+            stockItem {
+              quantity
+            }
             unit {
               name
             }
@@ -67,6 +70,7 @@ def fetch_data(keyword: str, num_products: int = 5):
                         "name": variant.get('name'),
                         "discountPrice": variant.get('discountPrice'),
                         "originalPrice": variant.get('originalPrice'),
+                        "quantity": variant.get('stockItem', {}).get('quantity'),
                         "unit": variant.get('unit', {}).get('name')
                     }
                     products.append(product)

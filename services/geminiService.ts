@@ -86,14 +86,15 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
   const systemPrompt = `
     Bạn là một trợ lý phân tích dữ liệu chính xác.
     Nhiệm vụ của bạn là lọc danh sách sản phẩm dựa trên truy vấn tìm kiếm "${query}".
-    Xác định các sản phẩm liên quan đến truy vấn và phù hợp với ý định của người dùng.
-    Loại bỏ các sản phẩm không liên quan và không chính xác với từ khóa tìm kiếm.
-    Sản phầm hợp lệ phải đi riêng lẻ, không đi theo combo.
+    Xác định danh sách các sản phẩm liên quan đến truy vấn và loại bỏ các sản phẩm không liên quan hay không chính xác với từ khóa tìm kiếm.
+    Sản phẩm hợp lệ phải đi riêng lẻ, không đi theo combo.
+    Nhận thức được các tên đồng nghĩa, ví dụ: (lô lô hay lollo, cherry hay sơ ri,...).
+    Nếu số lượng sản phẩm quá ít <= 2 thì có thể bỏ qua một số yếu tố xét hợp lệ như vùng hay khối lượng
     
-    Bạn phải xuất ra một đối tượng JSON hợp lệ với cấu trúc sau:
+    Xuất kết quả dưới dạng JSON với cấu trúc sau:
     {
       "valid_product_ids": {
-        "product_id": number,
+        "product_id": int,
         "product_name": string,
       },
       "searchSummary": "string (Một tóm tắt ngắn gọn 1 câu về những gì tìm thấy, bằng tiếng Việt)"
@@ -103,7 +104,7 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
   const userPrompt = `
     Query: "${query}"
     
-    DATA TO PROCESS:
+    DATA cần xử lý:
     ${JSON.stringify(simplifiedData, null, 2)}
   `;
 
@@ -144,7 +145,8 @@ export const fetchProductIntelligence = async (query: string): Promise<MarketAna
           productTitle: item.name,
           url: item.url,
           image_url: item.image_url,
-          unit: item.unit
+          unit: item.unit,
+          quantity: item.quantity
        };
   }).filter((item: any) => item !== null);
 

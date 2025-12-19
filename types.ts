@@ -8,6 +8,7 @@ export interface PricePoint {
   url?: string;
   image_url?: string;
   unit?: string;
+  quantity?: number;
 }
 
 export interface ProductVariant {
