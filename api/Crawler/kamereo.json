@@ -1,0 +1,29 @@
+[
+  {
+    "image_url": "https://image-handler-prod.s3-ap-southeast-1.amazonaws.com/supplier/654/PRODUCT_IMAGE/ec60eda2-2971-44e7-be27-c8b416f4f1f0.png",
+    "url": "https://kamereo.vn/product/94d4d043-f5da-45dd-a941-4ea3a0dc55a5",
+    "name": "[Thùng] Coca-Cola 320ml x 24 Lon",
+    "discountPrice": 189500,
+    "originalPrice": 243000,
+    "unit": "CASE",
+    "quantity": 1
+  },
+  {
+    "image_url": "https://images-handler.kamereo.vn/eyJidWNrZXQiOiJpbWFnZS1oYW5kbGVyLXByb2QiLCJrZXkiOiJzdXBwbGllci82NTQvUFJPRFVDVF9JTUFHRS9mNWM3NjZkZi1lN2Q3LTRjMTYtYjg0MC1jY2QxN2E4MjU3OTYuanBnIn0=",
+    "url": "https://kamereo.vn/product/39f9ad69-ca82-4480-9dca-e73bdaee2b96",
+    "name": "[Thùng] Coca-Cola Light 320ml x 24 Lon",
+    "discountPrice": 189500,
+    "originalPrice": 237500,
+    "unit": "CASE",
+    "quantity": 1
+  },
+  {
+    "image_url": "https://image-handler-prod.s3-ap-southeast-1.amazonaws.com/supplier/654/PRODUCT_IMAGE/c49cdfb6-8b79-4158-8ba2-1d8fd71256e5.png",
+    "url": "https://kamereo.vn/product/56724cb9-fd0b-4193-b1ad-92ca6f7af1a7",
+    "name": "[Thùng] Coca-Cola Zero 320ml x 24 Lon",
+    "discountPrice": 189500,
+    "originalPrice": 213500,
+    "unit": "CASE",
+    "quantity": 1
+  }
+]

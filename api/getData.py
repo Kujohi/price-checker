@@ -16,6 +16,9 @@ import kingfood
 import lotte
 import megaMarket
 import three_sach
+import bachHoaXanh
+import kamereo
+import winMart
 
 app = FastAPI()
 
@@ -63,6 +66,12 @@ async def run_crawler(crawler_module, keyword: str, source_name: str, num_produc
             data = await asyncio.to_thread(crawler_module.fetch_data, keyword, num_products)
         elif source_name == '3Sach':
             data = await asyncio.to_thread(crawler_module.crawl, keyword, num_products)
+        elif source_name == 'BachHoaXanh':
+            data = await asyncio.to_thread(crawler_module.fetch_data, keyword, num_products)
+        elif source_name == 'Kamereo':
+            data = await asyncio.to_thread(crawler_module.fetch_data, keyword, num_products)
+        elif source_name == 'WinMart':
+            data = await asyncio.to_thread(crawler_module.fetch_data, keyword, num_products)
         
         if not data:
             return []
@@ -99,6 +108,9 @@ async def search(request: SearchRequest):
         run_crawler(lotte, keyword, "Lottemart", num_products),
         run_crawler(megaMarket, keyword, "MegaMarket", num_products),
         run_crawler(three_sach, keyword, "3Sach", num_products),
+        run_crawler(bachHoaXanh, keyword, "BachHoaXanh", num_products),
+        run_crawler(kamereo, keyword, "Kamereo", num_products),
+        run_crawler(winMart, keyword, "WinMart", num_products),
     ]
     
     results_list = await asyncio.gather(*tasks)

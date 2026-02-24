@@ -6,17 +6,12 @@ def fetch_data(keyword: str, num_products: int):
     url = "https://discovery.tekoapis.com/api/v2/search-skus-v2"
 
     payload = {
-        "terminalId": 26595,
-        "page": 1,
-        "pageSize": 40,
-        "query": keyword,
-        "filter": {},
-        "sorting": {
-            "sort": "SORT_BY_UNSPECIFIED",
-            "order": "ORDER_BY_UNSPECIFIED"
-        },
-        "returnFilterable": [],
-        "isNeedFeaturedProducts": False
+        "keywords": keyword,
+        "provinceId": 1027,
+        "storeId": 2546,
+        "pageIndex": 0,
+        "pageSize": 10,
+        "sortStr": None
     }
 
     headers = {
