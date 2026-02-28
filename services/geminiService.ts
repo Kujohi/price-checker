@@ -114,7 +114,7 @@ Xuất danh sách sản phẩm hợp lệ dưới dạng JSON với cấu trúc 
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
     ],
-    model: "meta-llama/llama-4-maverick-17b-128e-instruct",
+    model: "openai/gpt-oss-120b",
     temperature: 0, // Low temperature for deterministic output
     response_format: { type: "json_object" }
   });
