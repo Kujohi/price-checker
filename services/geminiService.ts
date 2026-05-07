@@ -91,7 +91,7 @@ Sản phẩm hợp lệ cần:
 - Không đi theo kèm combo với sản phẩm khác không được truy vấn.
 
 Nhận thức được các tên đồng nghĩa, ví dụ: (lô lô hay lollo, cherry hay sơ ri,...).
-Nếu số lượng sản phẩm hợp lệ quá ít < 3 thì có thể bỏ qua một số yếu tố xét hợp lệ như vùng hay khối lượng
+Nếu số lượng sản phẩm hợp lệ quá ít (ít hơn 3 sản phẩm) thì có thể bỏ qua một số yếu tố xét hợp lệ như vùng hay khối lượng
     
 Xuất danh sách sản phẩm hợp lệ dưới dạng JSON với cấu trúc sau:
 {
