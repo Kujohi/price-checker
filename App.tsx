@@ -24,11 +24,17 @@ import { fetchProductIntelligence } from './services/geminiService';
 import { AppState, MarketAnalysis, PricePoint } from './types';
 
 interface BatchResult {
+  id: string;
   query: string;
   products: PricePoint[];
   status: 'pending' | 'success' | 'error';
   error?: string;
   summary?: string;
+}
+
+interface BatchInputItem {
+  id: string;
+  query: string;
 }
 
 function App() {
@@ -64,7 +70,7 @@ function App() {
 
   // Batch Processing State
   const [isBatchMode, setIsBatchMode] = useState(false);
-  const [batchQueue, setBatchQueue] = useState<string[]>([]);
+  const [batchQueue, setBatchQueue] = useState<BatchInputItem[]>([]);
   const [currentBatchIndex, setCurrentBatchIndex] = useState(0);
   const [batchResults, setBatchResults] = useState<BatchResult[]>([]);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
@@ -116,14 +122,23 @@ function App() {
         const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
         
         // Excel input format: first column is ID (no header), second column is query text.
-        const queries = jsonData
-          .map((row) => row[1])
-          .filter((cell) => cell !== null && cell !== undefined)
-          .map((cell) => String(cell).trim())
-          .filter((cell) => cell.length > 0);
+        const inputItems = jsonData
+          .map((row): BatchInputItem | null => {
+            const queryCell = row[1];
+            if (queryCell === null || queryCell === undefined) return null;
 
-        if (queries.length > 0) {
-          startBatchProcessing(queries);
+            const query = String(queryCell).trim();
+            if (!query) return null;
+
+            const idCell = row[0];
+            const id = idCell === null || idCell === undefined ? '' : String(idCell).trim();
+
+            return { id, query };
+          })
+          .filter((item): item is BatchInputItem => item !== null);
+
+        if (inputItems.length > 0) {
+          startBatchProcessing(inputItems);
         } else {
           setError("Không tìm thấy dữ liệu hợp lệ trong file Excel.");
           setAppState(AppState.ERROR);
@@ -139,28 +154,29 @@ function App() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const startBatchProcessing = async (queries: string[]) => {
+  const startBatchProcessing = async (inputItems: BatchInputItem[]) => {
     setIsBatchMode(true);
     setIsBatchProcessing(true);
-    setBatchQueue(queries);
+    setBatchQueue(inputItems);
     setBatchResults([]);
     setCurrentBatchIndex(0);
     setAppState(AppState.SEARCHING); // Reuse searching state for UI indication
 
     const results: BatchResult[] = [];
 
-    for (let i = 0; i < queries.length; i++) {
+    for (let i = 0; i < inputItems.length; i++) {
       setCurrentBatchIndex(i);
-      const query = queries[i].toLowerCase();
+      const currentItem = inputItems[i];
+      const query = currentItem.query;
       
       // Add a pending entry
-      setBatchResults(prev => [...prev, { query, products: [], status: 'pending' }]);
+      setBatchResults(prev => [...prev, { id: currentItem.id, query, products: [], status: 'pending' }]);
 
       try {
         // Wait time (3 seconds) between calls to avoid rate limits
         if (i > 0) await new Promise(resolve => setTimeout(resolve, 3000));
 
-        const data = await fetchProductIntelligence(query);
+        const data = await fetchProductIntelligence(query.toLowerCase());
         
         // Sort products
         if (data.products) {
@@ -168,6 +184,7 @@ function App() {
         }
 
         const result: BatchResult = {
+          id: currentItem.id,
           query,
           products: data.products,
           status: 'success',
@@ -185,6 +202,7 @@ function App() {
       } catch (err: any) {
         console.error(`Error fetching for ${query}:`, err);
         const errorResult: BatchResult = {
+          id: currentItem.id,
           query,
           products: [],
           status: 'error',
@@ -212,6 +230,7 @@ function App() {
       if (result.status === 'success' && result.products.length > 0) {
         result.products.forEach(p => {
           exportData.push({
+            'ID': result.id,
             'Từ Khóa': result.query,
             'Tên Sản Phẩm': p.productTitle,
             'Cửa Hàng': p.storeName,
@@ -224,6 +243,7 @@ function App() {
         });
       } else {
         exportData.push({
+          'ID': result.id,
           'Từ Khóa': result.query,
           'Trạng Thái': result.status === 'error' ? `Lỗi: ${result.error}` : 'Không tìm thấy sản phẩm'
         });
