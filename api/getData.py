@@ -101,16 +101,16 @@ async def search(request: SearchRequest):
     num_products = request.num_products
     
     tasks = [
-        run_crawler(coop, keyword, "Coopmart", num_products),
+        # run_crawler(coop, keyword, "Coopmart", num_products),
         run_crawler(emart, keyword, "Emart", num_products),
         run_crawler(farmer, keyword, "Farmers Market", num_products),
         run_crawler(kingfood, keyword, "KingFoodmart", num_products),
         run_crawler(lotte, keyword, "Lottemart", num_products),
-        run_crawler(megaMarket, keyword, "MegaMarket", num_products),
-        run_crawler(three_sach, keyword, "3Sach", num_products),
-        run_crawler(bachHoaXanh, keyword, "BachHoaXanh", num_products),
-        run_crawler(kamereo, keyword, "Kamereo", num_products),
-        run_crawler(winMart, keyword, "WinMart", num_products),
+        # run_crawler(megaMarket, keyword, "MegaMarket", num_products),
+        # run_crawler(three_sach, keyword, "3Sach", num_products),
+        # run_crawler(bachHoaXanh, keyword, "BachHoaXanh", num_products),
+        # run_crawler(kamereo, keyword, "Kamereo", num_products),
+        # run_crawler(winMart, keyword, "WinMart", num_products),
     ]
     
     results_list = await asyncio.gather(*tasks)
