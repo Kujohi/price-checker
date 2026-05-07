@@ -115,10 +115,12 @@ function App() {
         const sheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
         
-        // Assume first column contains product names, skipping empty rows
+        // Excel input format: first column is ID (no header), second column is query text.
         const queries = jsonData
-          .map(row => row[0])
-          .filter(cell => cell && typeof cell === 'string' && cell.trim().length > 0);
+          .map((row) => row[1])
+          .filter((cell) => cell !== null && cell !== undefined)
+          .map((cell) => String(cell).trim())
+          .filter((cell) => cell.length > 0);
 
         if (queries.length > 0) {
           startBatchProcessing(queries);
